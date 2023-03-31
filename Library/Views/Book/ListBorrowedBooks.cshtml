@@ -1,0 +1,45 @@
+﻿@model IEnumerable<Library.Models.BorrowedBookViewModel>
+
+@{
+    ViewData["Title"] = "ListBorrowedBooks";
+}
+
+
+<h5>@ViewData["message"]</h5>
+<span style="text-align:center">My Account</span>
+<table class="table">
+    <thead>
+        <tr>
+            <th>
+                @Html.DisplayNameFor(model => model.ISBN)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.DateBorrowed)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.DateReturned)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.OverDue)
+            </th>
+        </tr>
+    </thead>
+    <tbody>
+@foreach (var item in Model) {
+        <tr>
+            <td>
+                @Html.DisplayFor(modelItem => item.ISBN)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.DateBorrowed)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.DateReturned)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.OverDue)
+            </td>
+        </tr>
+}
+    </tbody>
+</table>

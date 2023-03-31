@@ -1,0 +1,41 @@
+﻿@model IEnumerable<Library.Models.StudentModel>
+
+@{
+    ViewData["Title"] = "GetStudentStatus";
+}
+
+<h1>StudentStatus</h1>
+
+
+<table class="table">
+    <thead>
+        <tr>
+            <th>
+                @Html.DisplayNameFor(model => model.StudentId)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.TotalLoan)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.TotalOverDue)
+            </th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+@foreach (var item in Model) {
+        <tr>
+            <td>
+                @Html.DisplayFor(modelItem => item.StudentId)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.TotalLoan)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.TotalOverDue)
+            </td>
+      
+        </tr>
+}
+    </tbody>
+</table>

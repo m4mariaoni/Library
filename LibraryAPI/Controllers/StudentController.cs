@@ -11,14 +11,14 @@ namespace LibraryAPI.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    public class BookController : ControllerBase
+    public class StudentController : ControllerBase
     {
 
         private readonly IBookService _bookService;
         Uri address;
         string url;
 
-        public BookController(IBookService bookService)
+        public StudentController(IBookService bookService)
         {
             _bookService = bookService;
         }

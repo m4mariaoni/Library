@@ -5,13 +5,13 @@ using System.Net.Http.Headers;
 
 namespace Library.Controllers
 {
-    public class BookController : Controller
+    public class StudentController : Controller
     {
         private readonly IConfiguration _configuration;
         string token = "";
         string copiesMsg = "";
 
-        public BookController(IConfiguration configuration)
+        public StudentController(IConfiguration configuration)
         {
             _configuration = configuration;
         }
@@ -43,7 +43,7 @@ namespace Library.Controllers
                 //Define request data format
                 client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
                 //Sending request to find web api REST service resource GetAllEmployees using HttpClient
-                HttpResponseMessage Resp = await client.GetAsync("api/Book/GetAllBooks");
+                HttpResponseMessage Resp = await client.GetAsync("api/Student/GetAllBooks");
                 //Checking the response is successful or not which is sent using HttpClient
                 if (Resp.IsSuccessStatusCode)
                 {
@@ -80,7 +80,7 @@ namespace Library.Controllers
                 client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token2);  
 
                 client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
-                HttpResponseMessage Resp = await client.PostAsJsonAsync($"api/Book/ReturnBook/{ISBN}",ISBN);
+                HttpResponseMessage Resp = await client.PostAsJsonAsync($"api/Student/ReturnBook/{ISBN}",ISBN);
                 if (Resp.IsSuccessStatusCode)
                 {
                    answer = Resp.Content.ReadAsStringAsync().Result;
@@ -138,7 +138,7 @@ namespace Library.Controllers
                 client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token2);
 
                 client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
-                HttpResponseMessage Resp = await client.PostAsJsonAsync($"api/Book/BorrowBook/{ISBN}", ISBN);
+                HttpResponseMessage Resp = await client.PostAsJsonAsync($"api/Student/BorrowBook/{ISBN}", ISBN);
                 if (Resp.IsSuccessStatusCode)
                 {
                     answer = Resp.Content.ReadAsStringAsync().Result;

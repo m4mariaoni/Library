@@ -21,7 +21,7 @@ namespace LibraryAPI.Service.Service
             _mapper = mapper;
             _appRepository = appRepository;
         }
-        public async Task<long> CreateAccount(UserModel user, string url)
+        public async Task<UserModel> CreateAccount(UserModel user, string url)
         {
             try
             {
@@ -35,7 +35,7 @@ namespace LibraryAPI.Service.Service
                 _user.Password = hashed;
                 await _appRepository.Users.Add(_user);
                 _appRepository.Save();
-                return _user.Id;
+                return user;
             }
             catch (Exception ex)
             {

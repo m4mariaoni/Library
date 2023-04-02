@@ -10,7 +10,7 @@ namespace LibraryAPI.Service.Interface
 {
     public interface IUserService
     {
-        Task<long> CreateAccount(UserModel user, string url);
+        Task<UserModel> CreateAccount(UserModel user, string url);
         Task<IEnumerable<UserModel>> GetAllUsers(string url);
         User GetLogin(Login login);
 

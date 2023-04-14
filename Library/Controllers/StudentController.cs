@@ -25,39 +25,7 @@ namespace Library.Controllers
         {
             return View();
         }
-        // GET: Student
-    
-
-
-        
-        [HttpGet]
-        public async Task<IActionResult> GetAllBooks(string msg)
-        {
-            List<BookModel> books = new List<BookModel>();
-            using (var client = new HttpClient())
-            {
-           
-                //client.BaseAddress = new Uri(Baseurl);
-                client.BaseAddress = new Uri(LibraryAPIUrl);
-                client.DefaultRequestHeaders.Clear();
-                //Define request data format
-                client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
-                //Sending request to find web api REST service resource GetAllEmployees using HttpClient
-                HttpResponseMessage Resp = await client.GetAsync("api/Student/GetAllBooks");
-                //Checking the response is successful or not which is sent using HttpClient
-                if (Resp.IsSuccessStatusCode)
-                {
-                    //Storing the response details recieved from web api
-                    var answer = Resp.Content.ReadAsStringAsync().Result;
-                    //Deserializing the response recieved from web api and storing into the Employee list
-                    books = JsonConvert.DeserializeObject<List<BookModel>>(answer);
-
-                }
-         
-            
-                return View(books);
-            }
-        }
+     
 
         [HttpGet]
         public IActionResult Return()
@@ -70,24 +38,37 @@ namespace Library.Controllers
         [HttpPost]
         public async Task<IActionResult> Return(string ISBN)
         {
+            //get the user token
             token = HttpContext.Request.Cookies["token"];
             var token2 =  token;
             var answer = "";
             var viewModel = new List<BorrowedBookViewModel>();
+          
             using (var client = new HttpClient())
             {
                 client.BaseAddress = new Uri(LibraryAPIUrl);
-                client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token2);  
+                client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token2);
 
+                //Define request data format
                 client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+
+                 //Sending request to find web api REST service resource to return book using HttpClient
                 HttpResponseMessage Resp = await client.PostAsJsonAsync($"api/Student/ReturnBook/{ISBN}",ISBN);
+
+                //Checking the response is successful or not which is sent using HttpClient
                 if (Resp.IsSuccessStatusCode)
                 {
-                   answer = Resp.Content.ReadAsStringAsync().Result;
-                   var  books = JsonConvert.DeserializeObject<BorrowedBookResponse> (answer);
+                    //Storing the response details recieved from web api
+                    answer = Resp.Content.ReadAsStringAsync().Result;
+
+                    //Deserializing the response recieved from web api and storing into the Employee list
+                    var books = JsonConvert.DeserializeObject<BorrowedBookResponse> (answer);
                     copiesMsg = books.Message;
                     ViewData["message"] = copiesMsg;
-
+                    if(books == null)
+                    {
+                        return View();
+                    }
                     foreach (var item in books.Borrowed)
                     {
                         var _borrow = new BorrowedBookViewModel();
@@ -109,11 +90,6 @@ namespace Library.Controllers
          
                 return View("ListBorrowedBooks",viewModel);
             }
-        }
-
-        public IActionResult ListBorrowedBooks(List<BorrowedBookViewModel> model)
-        {
-            return View(model);
         }
 
 
@@ -142,7 +118,7 @@ namespace Library.Controllers
                 if (Resp.IsSuccessStatusCode)
                 {
                     answer = Resp.Content.ReadAsStringAsync().Result;
-                    //await response.Content.ReadAsAsync<BookModel>();
+
                     var books = JsonConvert.DeserializeObject<BorrowedBookResponse>(answer);
                     copiesMsg = books.Message;
                     ViewData["message"] = copiesMsg;
@@ -192,13 +168,16 @@ namespace Library.Controllers
                 client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token2);
 
                 client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
-                HttpResponseMessage Resp = await client.GetAsync($"api/Book/StudentBookAccount");
+                HttpResponseMessage Resp = await client.GetAsync($"api/Student/StudentBookAccount");
                 if (Resp.IsSuccessStatusCode)
                 {
                     answer = Resp.Content.ReadAsStringAsync().Result;
 
                     var books = JsonConvert.DeserializeObject<List<BorrowedBookMsg>>(answer);      
-
+                    if(books== null)
+                    {
+                        return View("ListBorrowedBooks", viewModel);
+                    }
                     foreach (var item in books)
                     {
                         var _borrow = new BorrowedBookViewModel();

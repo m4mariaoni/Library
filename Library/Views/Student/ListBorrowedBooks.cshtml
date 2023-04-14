@@ -3,10 +3,11 @@
 @{
     ViewData["Title"] = "ListBorrowedBooks";
 }
-
-
-<h5>@ViewData["message"]</h5>
-<span style="text-align:center">My Account</span>
+@if(ViewData["message"] != null)
+{
+<div style="text-align:center !important;background:#e34420; padding:5px"><h6>@ViewData["message"]</h6></div>
+}
+<div style="text-align:center !important"><span>My Account</span></div>
 <table class="table">
     <thead>
         <tr>

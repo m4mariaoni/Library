@@ -7,6 +7,17 @@ namespace Library.Controllers
 {
     public class AuthenticationController : Controller
     {
+        private readonly IConfiguration _configuration;
+
+        public AuthenticationController(IConfiguration configuration)
+        {
+            _configuration = configuration;
+        }
+        public string LibraryAPIUrl
+        {
+            get { return _configuration.GetSection("LibraryAPIUrl").Value; }
+        }
+
         [HttpGet]
         public IActionResult Login()
         {
@@ -17,8 +28,7 @@ namespace Library.Controllers
         [HttpPost]
         public async Task<IActionResult> Login(LoginModel model)
         {
-            //Hosted web API REST Service base url
-            string Baseurl = "https://localhost:7019/";
+            string Baseurl = LibraryAPIUrl;
  
                 using (var client = new HttpClient())
                 {

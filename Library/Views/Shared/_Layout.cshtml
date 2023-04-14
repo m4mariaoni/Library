@@ -16,10 +16,14 @@
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/Library.styles.css" asp-append-version="true" />
+    <style>
+    nav a{color:white !important}
+    li.nav-item a{color:white !important}
+    </style>
 </head>
 <body>
     <header>
-        <nav class="navbar navbar-expand-sm navbar-toggleable-sm navbar-light bg-white border-bottom box-shadow mb-3">
+        <nav style="background:#686a65!important; height:60px;color:#ffffff" class="navbar navbar-expand-sm navbar-toggleable-sm navbar-light bg-white border-bottom box-shadow mb-3">
             <div class="container-fluid">
                 <a class="navbar-brand" asp-area="" asp-controller="Home" asp-action="GetAllBooks">Library</a>
                 <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target=".navbar-collapse" aria-controls="navbarSupportedContent"
@@ -46,7 +50,7 @@
                                 <a class="nav-link text-dark" asp-area="" asp-controller="Admin" asp-action="GetStudentLoanDetails">Current Loans</a>
                             </li>
                             <li class="nav-item">
-                                <a class="nav-link text-dark" asp-area="" asp-controller="Admin" asp-action="GetStudentOverDueDetailslBooks">Overdue</a>
+                                <a class="nav-link text-dark" asp-area="" asp-controller="Admin" asp-action="GetStudentOverDueDetails">Overdue</a>
                             </li>
                         }
                         @if(rolename == "STUDENT")
@@ -58,13 +62,13 @@
                                 <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="GetAllBooks">Books</a>
                             </li>
                             <li class="nav-item">
-                                <a class="nav-link text-dark" asp-area="" asp-controller="Book" asp-action="Borrow">Borrow</a>
+                                <a class="nav-link text-dark" asp-area="" asp-controller="Student" asp-action="Borrow">Borrow</a>
                             </li>
                             <li class="nav-item">
-                                <a class="nav-link text-dark" asp-area="" asp-controller="Book" asp-action="Return">Return</a>
+                                <a class="nav-link text-dark" asp-area="" asp-controller="Student" asp-action="Return">Return</a>
                             </li>
                             <li class="nav-item">
-                                <a class="nav-link text-dark" asp-area="" asp-controller="Book" asp-action="BookAccount">My Account</a>
+                                <a class="nav-link text-dark" asp-area="" asp-controller="Student" asp-action="BookAccount">My Account</a>
                             </li>
                         }
                     </ul>
@@ -72,7 +76,7 @@
                 <div>
                     <ul>
                         <li style="list-style:none">                                
-                            <a class="nav-link text-dark" asp-area="" asp-controller="Authentication" asp-action="Logout">Logout</a>
+                            <a class="nav-link text-white" asp-area="" asp-controller="Authentication" asp-action="Logout">Logout</a>
                         </li>
                     </ul>
                </div>

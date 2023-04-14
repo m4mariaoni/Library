@@ -9,7 +9,7 @@
 <h5>@ViewData["message"]</h5>
 <table class="table">
     <thead>
-        <tr>
+        <tr style="background-color:#e0dada !important">
             <th>
                 @Html.DisplayNameFor(model => model.ISBN)
             </th>
@@ -48,11 +48,7 @@
             <td>
                 @Html.DisplayFor(modelItem => item.Copies)
             </td>
-            <td>
-                @Html.ActionLink("Edit", "Edit", new { /* id=item.PrimaryKey */ }) |
-                @Html.ActionLink("Details", "Details", new { /* id=item.PrimaryKey */ }) |
-                @Html.ActionLink("Delete", "Delete", new { /* id=item.PrimaryKey */ })
-            </td>
+
         </tr>
 }
     </tbody>

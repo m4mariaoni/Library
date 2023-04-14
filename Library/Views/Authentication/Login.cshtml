@@ -16,11 +16,19 @@
 </head>
 <body>
 
-    <h4>Login</h4>
-<hr />
-<div class="row">
-    <div class="col-md-4">
-        <form asp-action="Login">
+    <h4 style="background:#686a65!important; padding:15px; color:#ffffff">Library Portal</h4>
+
+<br />
+<br />
+<div class="container">
+  <div class="row">
+    <div class="col-md-5 offset-md-3">
+      <div class="card">
+        <div class="card-header">
+          <h2 class="text-center">Login Form</h2>
+        </div>
+        <div class="card-body">
+          <form asp-action="Login">
             <div asp-validation-summary="ModelOnly" class="text-danger"></div>
             <div class="form-group">
                 <label asp-for="UserName" class="control-label"></label>
@@ -32,18 +40,18 @@
                 <input asp-for="Password" class="form-control" type="password" />
                 <span asp-validation-for="Password" class="text-danger"></span>
             </div>
-            <div class="form-group">
+            <div class="form-group" style="margin-top:20px">
                 <input type="submit" value="Login" class="btn btn-primary" />
             </div>
         </form>
-    </div>
-</div>
-
-    <footer class="border-top footer text-muted">
-        <div class="container">
-            &copy; 2023 - Library - <a asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
         </div>
-    </footer>
+      </div>
+    </div>
+  </div>
+</div>
+<br />
+<br />
+
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
     <script src="~/js/site.js" asp-append-version="true"></script>

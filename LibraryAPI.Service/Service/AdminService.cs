@@ -41,7 +41,7 @@ namespace LibraryAPI.Service.Service
                             .Select(y => new StudentModel
                             {
                                  TotalLoan = y.Select(v => v.DateReturned == null).Count(),
-                                 TotalOverDue = y.Sum(v=>v.OverDue.Value),
+                                 TotalOverDue = y.Sum(v=>v.OverDue.GetValueOrDefault()),
                                  StudentId = y.Select(v=>v.UserName).FirstOrDefault(),
                             }).ToList();
 

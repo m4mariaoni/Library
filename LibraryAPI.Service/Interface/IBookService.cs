@@ -13,7 +13,7 @@ namespace LibraryAPI.Service.Interface
         
         Task<BorrowedBookResponse> AddBorrowedBooks(string isbn, long userId);
         Task<BorrowedBookResponse> ReturnBorrowedBooks(string isbn, long userId);
-        Task<IEnumerable<BorrowedBook>> StudentBorrowedBooks(long userId);
+        Task<IEnumerable<BorrowedBookViewModel>> StudentBorrowedBooks(long userId);
 
         //Task<AccountViewModel> GetAccountByStudentId(string studentId, string url);
 

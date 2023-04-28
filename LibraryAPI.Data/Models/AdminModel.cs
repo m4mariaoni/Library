@@ -8,6 +8,7 @@ namespace LibraryAPI.Data.Models
 {
     public  class StudentModel
     {
+        public long userId { get; set; }
         public string StudentId { get; set; }
         public int TotalLoan { get; set; }
         public int TotalOverDue { get; set; }

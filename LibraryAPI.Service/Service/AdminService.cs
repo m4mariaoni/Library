@@ -37,15 +37,24 @@ namespace LibraryAPI.Service.Service
         {
             var model = new List<StudentModel>();
             var books =  await _appRepository.BorrowedBooks.GetAll();
-            var status = books.GroupBy(x => x.UserName)
+            var status = books.GroupBy(x => x.userId)  //UserName
                             .Select(y => new StudentModel
                             {
                                  TotalLoan = y.Select(v => v.DateReturned == null).Count(),
                                  TotalOverDue = y.Sum(v=>v.OverDue.GetValueOrDefault()),
-                                 StudentId = y.Select(v=>v.UserName).FirstOrDefault(),
+                                userId = y.Select(v=>v.userId).FirstOrDefault(), 
+                                
                             }).ToList();
-
-            return status;
+            foreach (var item in status)
+            {
+                var addStudent = new StudentModel();
+                addStudent.StudentId = _appRepository.Users.Search(x => x.Id == item.userId).Select(y => y.Username).FirstOrDefault();
+                addStudent.TotalLoan = item.TotalLoan;
+                addStudent.TotalOverDue = item.TotalOverDue;
+                addStudent.userId = item.userId;
+                model.Add(addStudent);
+            }
+            return model;
         }
 
         public async Task<IEnumerable<StudentLoanModel>> StudentLoanDetails()
@@ -55,12 +64,12 @@ namespace LibraryAPI.Service.Service
             var status = books.Where(x=>x.DateReturned == null).ToList();
             foreach (var item in status)
             {
-                var loan = new StudentLoanModel();
-               var title =  _appRepository.Books.Search(x => x.ISBN == item.ISBN).Select(y=>y.Title).FirstOrDefault();
-               loan.ISBN = item.ISBN;
-               loan.Student = item.UserName;
+               var getBook = _appRepository.Books.Search(x => x.Id == item.bookId).FirstOrDefault();
+               var loan = new StudentLoanModel();
+               loan.Title = getBook.Title;
+               loan.ISBN = getBook.ISBN;
+               loan.Student = _appRepository.Users.Search(x=>x .Id == item.userId).Select(y=>y.Username).FirstOrDefault();
                loan.Borrowed = item.DateBorrowed.ToString("dd-MMM-yyyy");
-               loan.Title = title;
                model.Add(loan);
             }
             return model;
@@ -70,15 +79,15 @@ namespace LibraryAPI.Service.Service
         {
             var model = new List<StudentLoanModel>();
             var books = await _appRepository.BorrowedBooks.GetAll();
-            var status = books.Where(x => x.OverDue > 0 ).ToList();
+            var status = books.Where(x => x.OverDue == null).ToList();     //(x => x.OverDue > 0 ).ToList();
             foreach (var item in status)
             {
+                var getBook = _appRepository.Books.Search(x => x.Id == item.bookId).FirstOrDefault();
                 var loan = new StudentLoanModel();
-                var title = _appRepository.Books.Search(x => x.ISBN == item.ISBN).Select(y => y.Title).FirstOrDefault();
-                loan.ISBN = item.ISBN;
-                loan.Student = item.UserName;
+                loan.Title = getBook.Title;
+                loan.ISBN = getBook.ISBN;
+                loan.Student = _appRepository.Users.Search(x => x.Id == item.userId).Select(y => y.Username).FirstOrDefault();
                 loan.Borrowed = item.DateBorrowed.ToString("dd-MMM-yyyy");
-                loan.Title = title;
                 model.Add(loan);
             }
             return model;

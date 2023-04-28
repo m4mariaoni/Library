@@ -27,6 +27,7 @@ namespace LibraryAPI.Data.Models
         public string ISBN { get; set; }
         public DateTime DateBorrowed { get; set; }
         public DateTime? DateReturned { get; set; }
+        public DateTime? ExpectedReturnDate { get; set; }
         public int? OverDue { get; set; }
     }
 

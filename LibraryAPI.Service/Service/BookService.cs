@@ -1,6 +1,7 @@
 ﻿using AutoMapper;
 using LibraryAPI.Data.Entity;
 using LibraryAPI.Data.Models;
+using LibraryAPI.Infrastructure;
 using LibraryAPI.Infrastructure.Interface;
 using LibraryAPI.Service.Interface;
 using Microsoft.AspNetCore.Http;
@@ -29,9 +30,9 @@ namespace LibraryAPI.Service.Service
             _httpContextAccessor = httpContextAccessor;
         }
 
-        public string LibraryAPIUrl
+        public string InvoiceAPIUrl
         {
-            get { return _configuration.GetSection("LibraryAPIUrl").Value; }
+            get { return _configuration.GetSection("InvoiceAPIUrl").Value; }
         }
 
         public async Task<BorrowedBookResponse> AddBorrowedBooks(string isbn, long userId)
@@ -39,7 +40,7 @@ namespace LibraryAPI.Service.Service
             var _books = new List<BorrowedBookViewModel>();
             var resp = new BorrowedBookResponse();
             var books = _appRepository.Books.Search(x => x.ISBN == isbn).FirstOrDefault();
-            if(books.Copies == 0)
+            if(books != null && books.Copies  <= 0)
             {
                 resp = new BorrowedBookResponse()
                 {
@@ -51,8 +52,9 @@ namespace LibraryAPI.Service.Service
             }
 
             var user =_appRepository.Users.Search(x => x.Id == userId).Select(y => y.Username).FirstOrDefault();
-            var getBorrowedBook = _appRepository.BorrowedBooks.Search(x => x.ISBN == isbn && x.DateReturned == null
-            && x.UserName == user).FirstOrDefault();
+
+            var getBorrowedBook = _appRepository.BorrowedBooks.Search(x => x.Book.ISBN == isbn && x.DateReturned == null
+           && x.userId == userId).FirstOrDefault();
             if (getBorrowedBook != null)
             {
                 resp = new BorrowedBookResponse()
@@ -64,21 +66,24 @@ namespace LibraryAPI.Service.Service
             }
 
             var saveBook = new BorrowedBook();
-            saveBook.ISBN = isbn;
-            saveBook.UserName = user;
+
+            saveBook.bookId = books.Id;
+            saveBook.userId = userId;
             saveBook.DateBorrowed = DateTime.Now;
             saveBook.ExpectedReturnDate = DateTime.Now.AddDays(1);
+
             _appRepository.BorrowedBooks.Add(saveBook);
             _appRepository.Save();
-
-            var allbooks = _appRepository.BorrowedBooks.Search(x => x.UserName == user).ToList();
-            _books = _mapper.Map<List<BorrowedBookViewModel>>(allbooks);
-
-            
-            int noOfCopies  = books.Copies - 1;
+       
+            //Remove from available copies
+            int noOfCopies = books.Copies - 1;
             books.Copies = noOfCopies;
-            _appRepository.Books.Update(books);
-            _appRepository.Save();
+           _appRepository.Books.Update(books);
+           _appRepository.Save();
+
+            //Get all the books user have ever borrowed.
+            _books = getUserBorrowedbooks(userId, isbn);
+
             var ExpectReturned = saveBook.ExpectedReturnDate.Value.ToString("dd-MMM-yyyy");
             resp = new BorrowedBookResponse()
             {
@@ -91,18 +96,32 @@ namespace LibraryAPI.Service.Service
         public async Task<BorrowedBookResponse> ReturnBorrowedBooks(string isbn, long userId)
         {
             var _books = new List<BorrowedBookViewModel>();
-            var user = _appRepository.Users.Search(x => x.Id == userId).Select(y => y.Username).FirstOrDefault();
-            var book = _appRepository.BorrowedBooks.Search(x => x.ISBN == isbn && x.UserName == user && x.DateReturned==null).FirstOrDefault();
+            var resp = new BorrowedBookResponse();
 
-            //var days = (DateTime.Now - book.DateBorrowed).TotalDays;
-            //var getday = Math.Truncate(days); 
+            var user = _appRepository.Users.Search(x => x.Id == userId).FirstOrDefault();
+
+            var getBookDetails = _appRepository.Books.Search(x => x.ISBN == isbn).FirstOrDefault();
+        
+
+            var book = _appRepository.BorrowedBooks.Search(x => x.bookId == getBookDetails.Id && x.userId == userId && x.DateReturned == null).FirstOrDefault();
+            if(book == null)
+            {
+                resp = new BorrowedBookResponse()
+                {
+                    Message = $"You did not borrow any book with isbn {isbn}",
+                    Borrowed = _books
+                };
+
+                return resp;
+            }
+
             var getday = new double();
             if (DateTime.Now > book.ExpectedReturnDate)
             {
                 var days2 = (DateTime.Now - book.ExpectedReturnDate.Value).TotalDays;
                 getday = Math.Truncate(days2);
             }
-
+           
             book.DateReturned = DateTime.Now;
             book.OverDue = Convert.ToInt16(getday);
 
@@ -110,23 +129,22 @@ namespace LibraryAPI.Service.Service
             _appRepository.BorrowedBooks.Update(book);
             _appRepository.Save();
 
-            var allbooks = _appRepository.BorrowedBooks.Search(x => x.UserName == user).ToList();
-            _books = _mapper.Map<List<BorrowedBookViewModel>>(allbooks);
-
-            var books = _appRepository.Books.Search(x => x.ISBN == isbn).FirstOrDefault();
-
-            int noOfCopies = books.Copies + 1;
-            books.Copies = noOfCopies;
            
-            _appRepository.Books.Update(books);
+            int noOfCopies = getBookDetails.Copies + 1;
+            getBookDetails.Copies = noOfCopies;
+           
+            _appRepository.Books.Update(getBookDetails);
             _appRepository.Save();
-            var viewModel = new InvoiceViewModel();
-            var resp = new BorrowedBookResponse();
+
+            //Get all the books user have ever borrowed.
+            _books = getUserBorrowedbooks(userId, isbn);
+            var viewModel = new InvoiceViewModel();           
+            resp = new BorrowedBookResponse();
             if (book.OverDue > 0)
             {
                 InvoiceModel invoiceModel = new InvoiceModel();
                 invoiceModel.DueDate = book.ExpectedReturnDate.Value;
-                invoiceModel.StudentId = user;
+                invoiceModel.StudentId = user.Username;
                 invoiceModel.Amount = 5 * getday;
                 invoiceModel.Type = 0;
                 viewModel = await CreateInvoice(invoiceModel);
@@ -149,13 +167,21 @@ namespace LibraryAPI.Service.Service
             return resp;
         }
 
-        public async Task<IEnumerable<BorrowedBook>> StudentBorrowedBooks(long userId)
+        public async Task<IEnumerable<BorrowedBookViewModel>> StudentBorrowedBooks(long userId)
         {
-            var viewModel = new List<BorrowedBook>();
-            var user = _appRepository.Users.Search(x => x.Id == userId).Select(y => y.Username).FirstOrDefault();
-            var book =  _appRepository.BorrowedBooks.Search(x =>  x.UserName == user).ToList();
+            var viewModel = new List<BorrowedBookViewModel>();
+            var user =  _appRepository.Users.Search(x => x.Id == userId).Select(y => y.Username).FirstOrDefault();
+            //var book =  _appRepository.BorrowedBooks.Search(x =>  x.UserName == user).ToList();
+            var book =   _appRepository.BorrowedBooks.Search(x =>  x.userId == userId).ToList();
             foreach (var item in book)
             {
+                var bookModel = new BorrowedBookViewModel();
+                bookModel.Id = item.Id;
+                bookModel.ISBN = _appRepository.Books.Search(x => x.Id == item.bookId).Select(y => y.ISBN).LastOrDefault();
+                bookModel.DateBorrowed = item.DateBorrowed;
+                bookModel.DateReturned = item.DateReturned;
+                bookModel.OverDue = item.OverDue;
+                bookModel.UserName = user;
                 if (item.DateReturned == null)
                 {
                     var getday = new double();
@@ -165,13 +191,14 @@ namespace LibraryAPI.Service.Service
                         getday = Math.Truncate(days2);
                     }
 
-                    item.OverDue = Convert.ToInt16(getday);
+                    bookModel.OverDue = Convert.ToInt16(getday);
 
-                    viewModel.Add(item);
+                    viewModel.Add(bookModel);
                 }
                 else
                 {
-                    viewModel.Add(item);
+                    bookModel.OverDue = 0;
+                    viewModel.Add(bookModel);
                 }
 
             }
@@ -188,8 +215,8 @@ namespace LibraryAPI.Service.Service
             var viewModel = new InvoiceViewModel();
             using (var client = new HttpClient())
             {
-                var apiUrl = LibraryAPIUrl + "api/Invoice";
-                apiUrl = "http://localhost:5179/api/Invoice";
+                var apiUrl = InvoiceAPIUrl + "api/Invoice";
+
                 var json = JsonConvert.SerializeObject(model);
                 HttpContent content = new StringContent(json, Encoding.UTF8, "application/json");
 
@@ -211,51 +238,42 @@ namespace LibraryAPI.Service.Service
                 return viewModel;
             }
 
-
-            //using (var client = new HttpClient())
-            //{
-            //    client.BaseAddress = new Uri(LibraryAPIUrl);
-            //    client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token2);
-
-            //    client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
-            //    HttpResponseMessage Resp = await client.PostAsJsonAsync($"api/Student/BorrowBook/{ISBN}", ISBN);
-            //    if (Resp.IsSuccessStatusCode)
-            //    {
-            //        answer = Resp.Content.ReadAsStringAsync().Result;
-            //        //await response.Content.ReadAsAsync<BookModel>();
-            //        var books = JsonConvert.DeserializeObject<BorrowedBookResponse>(answer);
-            //        copiesMsg = books.Message;
-            //        ViewData["message"] = copiesMsg;
-
-            //        if (books.Borrowed == null)
-            //        {
-            //            return RedirectToAction("GetAllBooks", "Book", copiesMsg);
-            //        }
-
-            //        foreach (var item in books.Borrowed)
-            //        {
-            //            var _borrow = new BorrowedBookViewModel();
-            //            _borrow.ISBN = item.ISBN;
-            //            _borrow.DateBorrowed = item.DateBorrowed.ToString("dd-MMM-yyyy");
-            //            if (item.DateReturned != null)
-            //            {
-            //                _borrow.DateReturned = item.DateReturned.Value.ToString("dd-MMM-yyyy");
-            //            }
-            //            else
-            //            {
-            //                _borrow.DateReturned = null;
-            //            }
-            //            _borrow.OverDue = item.OverDue;
-            //            viewModel.Add(_borrow);
-            //        }
-
-            //    }
-
-            //    return View("ListBorrowedBooks", viewModel);
-            //}
         }
 
+        private List<BorrowedBookViewModel> getUserBorrowedbooks(long userId, string isbn)
+        {
+            //Get all the books user have ever borrowed.
+            var _books = new List<BorrowedBookViewModel>();
+            var allbooks = _appRepository.BorrowedBooks.Search(x => x.userId == userId).ToList();
+            foreach (var item in allbooks)
+            {
+                var bookItem = new BorrowedBookViewModel();
+                bookItem.Id = item.Id;
+                bookItem.UserName = _appRepository.Users.Search(s => s.Id == userId).Select(y => y.Username).FirstOrDefault();
+                bookItem.ISBN = _appRepository.Books.Search(x=>x.Id == item.bookId).Select(y=>y.ISBN).FirstOrDefault();
+                bookItem.DateBorrowed = item.DateBorrowed;
+                bookItem.DateReturned = item.DateReturned;
+                bookItem.ExpectedReturnDate = item.ExpectedReturnDate.Value;
+                bookItem.OverDue = getOverDue(item.ExpectedReturnDate.Value);
+                _books.Add(bookItem);
+            }
+            return _books;
+        }
 
+        private int getOverDue(DateTime expectedReturnDate)
+        {
+            var getday = new double();
+            if (DateTime.Now > expectedReturnDate)
+            {
+                var days2 = (DateTime.Now - expectedReturnDate).TotalDays;
+                getday = Math.Truncate(days2);
+            }
+            else
+            {
+                getday = 0;
+            }
 
+            return Convert.ToInt16(getday);
+        }
     }
 }

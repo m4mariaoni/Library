@@ -16,5 +16,6 @@ namespace LibraryAPI.Data.Entity
         public string LastName { get; set; }
         public bool isAuthenticated { get; set; }
         public int Role { get; set; }
+        public virtual BorrowedBook BorrowedBook { get; set; }
     }
 }

@@ -14,6 +14,7 @@ namespace LibraryAPI.Data.Entity
         public string Author { get; set; }
         public string Year { get; set; }
         public int Copies { get; set; }
+        public virtual BorrowedBook BorrowedBook { get; set; }
     }
 
 
